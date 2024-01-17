@@ -37,6 +37,17 @@ This script is intended to be used with images that you wish to process using th
 2.  Run the script to train the autoencoder on your image tiles.
 3.  The trained model will be saved as `my_autoencoder`.
 
+Pre-trained Model
+-----------------
+
+A pre-trained model `my_autoencoder.h5` is also included in the repository. This model has been trained for 30,000 epochs on a specific dataset. You can use this model directly to see how the autoencoder performs without having to train it from scratch.
+
+To use the pre-trained model, simply load it using Keras:
+
+pythonCopy code
+
+`from tensorflow.keras.models import load_model  autoencoder = load_model('my_autoencoder.h5')`
+
 Code Overview
 -------------
 
@@ -53,7 +64,3 @@ License
 -------
 
 This project is not open-source and the right of publishing belongs to developers, Reza Attarzadeh and Moussa Tembely
-
-* * *
-
-This README provides a basic overview of the project, installation instructions, usage examples, and a brief code description. Depending on your project's complexity and audience, you may need to include more detailed explanations, additional sections, or more comprehensive installation and usage instructions.
