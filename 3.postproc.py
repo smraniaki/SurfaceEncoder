@@ -1,10 +1,11 @@
 import sys
 import numpy as np
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSlider, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSlider, QLabel, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
 from tensorflow.keras.models import load_model
+import random 
 
 class AutoencoderDemo(QWidget):
     def __init__(self):
@@ -20,7 +21,7 @@ class AutoencoderDemo(QWidget):
             # Running in a normal Python environment
             bundle_dir = os.path.dirname(os.path.abspath(__file__))
 
-        model_path = os.path.join(bundle_dir, 'my_autoencoder30k')
+        model_path = os.path.join(bundle_dir, 'my_autoencoder70k')
 
         self.model = load_model(model_path)
         self.model.summary()
@@ -41,16 +42,31 @@ class AutoencoderDemo(QWidget):
             self.sliders.append(slider)
             sliderLayout.addWidget(slider)
 
+
         mainLayout.addLayout(sliderLayout)
 
         self.imageLabel = QLabel(self)
         mainLayout.addWidget(self.imageLabel)
 
         self.setLayout(mainLayout)
-        self.setWindowTitle('Autoencoder Image Reconstruction')
+        self.setWindowTitle('Surface Decoder')
         self.setGeometry(300, 300, 1200, 800) 
         self.updateImage()
 
+        self.randomButton = QPushButton('Random Generation', self)
+        self.randomButton.clicked.connect(self.randomizeSliders)
+        
+        topRightLayout = QVBoxLayout()
+        topRightLayout.addWidget(self.randomButton)
+        topRightLayout.addStretch(1)
+        mainLayout.addLayout(topRightLayout)
+
+
+    def randomizeSliders(self):
+        for slider in self.sliders:
+            random_value = random.randint(slider.minimum(), slider.maximum())
+            slider.setValue(random_value)
+                    
     def changeValue(self, value):
         self.updateImage()
 
@@ -66,7 +82,7 @@ class AutoencoderDemo(QWidget):
             qImg = qImg.scaled(width * 4, height * 4, Qt.KeepAspectRatio)  # Scale the image to 4 times its size keeping the aspect ratio
             
             self.imageLabel.setPixmap(QPixmap.fromImage(qImg))
-            self.imageLabel.setAlignment(Qt.AlignCenter)  # Center the image
+            self.imageLabel.setAlignment(Qt.AlignCenter)  
 
 def main():
     app = QApplication(sys.argv)
