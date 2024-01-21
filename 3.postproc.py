@@ -1,11 +1,15 @@
 import sys
 import numpy as np
 import os
+import random
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSlider, QLabel, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
 from tensorflow.keras.models import load_model
-import random 
+
+from PIL import Image
+from io import BytesIO
+import cv2
 
 class AutoencoderDemo(QWidget):
     def __init__(self):
@@ -21,7 +25,7 @@ class AutoencoderDemo(QWidget):
             # Running in a normal Python environment
             bundle_dir = os.path.dirname(os.path.abspath(__file__))
 
-        model_path = os.path.join(bundle_dir, 'my_autoencoder70k')
+        model_path = os.path.join(bundle_dir, 'preTrainedModels/Surfencoder70k.h5')
 
         self.model = load_model(model_path)
         self.model.summary()
@@ -42,7 +46,6 @@ class AutoencoderDemo(QWidget):
             self.sliders.append(slider)
             sliderLayout.addWidget(slider)
 
-
         mainLayout.addLayout(sliderLayout)
 
         self.imageLabel = QLabel(self)
@@ -53,14 +56,13 @@ class AutoencoderDemo(QWidget):
         self.setGeometry(300, 300, 1200, 800) 
         self.updateImage()
 
+        self.denoisingButton = QPushButton('Denoising', self)
+        self.denoisingButton.clicked.connect(self.denoiseImage)
+        sliderLayout.addWidget(self.denoisingButton)
+
         self.randomButton = QPushButton('Random Generation', self)
         self.randomButton.clicked.connect(self.randomizeSliders)
-        
-        topRightLayout = QVBoxLayout()
-        topRightLayout.addWidget(self.randomButton)
-        topRightLayout.addStretch(1)
-        mainLayout.addLayout(topRightLayout)
-
+        sliderLayout.addWidget(self.randomButton)
 
     def randomizeSliders(self):
         for slider in self.sliders:
@@ -79,10 +81,39 @@ class AutoencoderDemo(QWidget):
             height, width, channel = reconstructed_img.shape
             bytesPerLine = 3 * width
             qImg = QImage(reconstructed_img.data, width, height, bytesPerLine, QImage.Format_RGB888)
-            qImg = qImg.scaled(width * 4, height * 4, Qt.KeepAspectRatio)  # Scale the image to 4 times its size keeping the aspect ratio
+            qImg = qImg.scaled(width * 3, height * 3, Qt.KeepAspectRatio)
             
             self.imageLabel.setPixmap(QPixmap.fromImage(qImg))
             self.imageLabel.setAlignment(Qt.AlignCenter)  
+
+    def denoiseImage(self):
+        try:
+            # Get the current state of the sliders to generate the encoded image
+            z_sample = np.array([slider.value() / 10.0 for slider in self.sliders]).reshape((1, self.latent_dim))
+            generated_img = self.decoder.predict(z_sample)[0]
+
+            # Convert the generated image from the decoder to a format suitable for the autoencoder
+            generated_img = (generated_img * 255).astype(np.uint8)
+            generated_img_pil = Image.fromarray(generated_img)
+            generated_img_pil = generated_img_pil.convert('L')  # Convert to grayscale
+            generated_img_pil = generated_img_pil.resize((128, 128))  # Resize to 128x128
+
+            # Convert PIL image to numpy array expected by the model
+            denoise_input = np.array(generated_img_pil).reshape((1, 128, 128, 1)) / 255.0
+
+            # Denoise the image using the autoencoder
+            denoised_img = self.model.predict(denoise_input)[0]
+
+            # Display the denoised image
+            denoised_img = (denoised_img * 255).astype(np.uint8)
+            height, width, channel = denoised_img.shape
+            bytesPerLine = channel * width
+            qImg = QImage(denoised_img.data, width, height, bytesPerLine, QImage.Format_RGB888)
+            qImg = qImg.scaled(width * 3, height * 3, Qt.KeepAspectRatio)
+            self.imageLabel.setPixmap(QPixmap.fromImage(qImg))
+            self.imageLabel.setAlignment(Qt.AlignCenter)
+        except Exception as e:
+            print("Error in denoising: ", str(e))
 
 def main():
     app = QApplication(sys.argv)
