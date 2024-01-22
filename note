@@ -1,2 +1,6 @@
+pip freeze > requirements.txt
+
+pip install -r requirements.txt
+
 pyinstaller --windowed --onefile --add-data 'Surfencoder70k.h5:.' 3.postproc.py
 
