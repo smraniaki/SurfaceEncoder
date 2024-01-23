@@ -32,7 +32,7 @@ class AutoencoderDemo(QWidget):
             # Running in a normal Python environment
             bundle_dir = os.path.dirname(os.path.abspath(__file__))
 
-        model_path = os.path.join(bundle_dir, "preTrainedModels/Surfencoder70k.h5")
+        model_path = os.path.join(bundle_dir, "Surfencoder70k.h5")
         self.model = load_model(model_path)
         self.model.summary()
         self.decoder = self.model.get_layer("decoder")
