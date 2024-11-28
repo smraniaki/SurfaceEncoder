@@ -8,7 +8,7 @@ Getting Started
 
 ### Prerequisites
 
-*   Python 3.x
+*   Tested on Python 3.11 and 3.10
 *   PIL (Python Imaging Library)
 *   TensorFlow
 *   Keras
